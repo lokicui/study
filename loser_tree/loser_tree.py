@@ -50,6 +50,8 @@ class LoserTree(object):
 
 if __name__ == '__main__':
     ways = [[1,5,9,13], [2,6,10,14], [3,7,11,15], [4,8,12,16]]
+    #测试用例中有4路数据，当路数发生变化的时候需要重建败者树
+    #这个测试用例中没有对败者树进行重建,所以设置测试用例的时候要小心,调用next的时候别让路数发生变化
     tree = LoserTree(ways)
-    for i in range(10):
+    for i in range(12): #要是设置大于12就会出错
         tree.next()

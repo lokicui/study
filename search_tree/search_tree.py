@@ -81,7 +81,7 @@ class SearchTree(object):
             #have two childrens
             if node.left and node.right:
                 #find min node of right children
-                min_node = self.find_min(node.right)
+                min_node = self.find_min(node.right) # be careful, is right child of node  NOT node self
                 node.element = min_node.element
                 node.right = self.delete(node.element, node.right)
             #have left child
