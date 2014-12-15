@@ -27,6 +27,8 @@ class AvlTree(object):
 
     def single_rotate_with_left(self, k2):
         '''
+        N是新插入的元素,到底是作为左孩子还是右孩子根据N是否大于X来确定
+
         LL单旋转
 
               k2
@@ -34,14 +36,15 @@ class AvlTree(object):
             k1  Z
            / \
           X   Y
-
+          |
+          N
           ==>
 
-            k1
-           / \
-          X  K2
-            /  \
-           Y    Z
+             k1
+           /   \
+          X     K2
+          |    /  \
+          N   Y    Z
         '''
         k1 = k2.left
         k2.left = k1.right
@@ -52,6 +55,8 @@ class AvlTree(object):
 
     def single_rotate_with_right(self, k2):
         '''
+        N是新插入的元素,到底是作为左孩子还是右孩子根据N是否大于Z来确定
+
         RR单旋转
 
             k2
@@ -59,14 +64,15 @@ class AvlTree(object):
           X   k1
              /  \
             Y    Z
-
+                 |
+                 N
          ===>
 
-            k1
-           /  \
-          k2   Z
-         /  \
-        X    Y
+             k1
+           /    \
+          k2     Z
+         /  \    |
+        X    Y   N
         '''
         k1 = k2.right
         k2.right = k1.left
@@ -77,6 +83,8 @@ class AvlTree(object):
 
     def double_rotate_with_left(self, k3):
         '''
+        B or C是新插入的元素, B代表新插入的数据小于k2
+
         LR双旋转
         若按LL单旋转的思路把K1往上提一层,发现仍然不能满足要求
         说白了k2是介于k1和k3中间的
@@ -118,6 +126,8 @@ class AvlTree(object):
 
     def double_rotate_with_right(self, k3):
         '''
+        B or C是新插入的元素, B代表新插入的数据小于k2
+
         RL双旋转
 
               k3
@@ -154,6 +164,72 @@ class AvlTree(object):
         #return self.single_rotate_with_right(k3)
         #########################################
         return k2
+
+    def find_min(self, n):
+        n = n or self.root
+        while n and n.left:
+            n = n.left
+        return n
+
+    def find_max(self, n):
+        n = n or self.root
+        while n and n.right:
+            n = n.right
+        return n
+
+    def __delete(self, e, n):
+        '''
+        '''
+        if not n:
+            return None
+        elif e < n.element:
+            n.left = self.__delete(e, n.left)
+            if self.get_height(n.right) - self.get_height(n.left) == 2:
+                if self.get_height(n.right.left) > self.get_height(n.right.right):
+                    #RL双旋转
+                    n = self.double_rotate_with_right(n)
+                else:
+                    #RR单旋转
+                    n = self.single_rotate_with_right(n)
+        elif e > n.element:
+            n.right = self.__delete(e, n.right)
+            if self.get_height(n.left) - self.get_height(n.right) == 2:
+                if self.get_height(n.left.right) > self.get_height(n.right.left):
+                    #LR双旋转
+                    n = self.double_rotate_with_right(n)
+                else:
+                    #LL单旋转
+                    n = self.single_rotate_with_left(n)
+        else:
+            #find it
+            #叶子节点,直接咔嚓掉
+            if not n.left and not n.right:
+                if n == self.root:
+                    self.root = None
+                n = None
+            elif n.left:
+                n = n.right
+            elif n.right:
+                n = n.left
+            else:
+                #最复杂的情况，两个孩子都健在
+                #两种选择：
+                #   1、if右子树高, then选择右子树中最小的节点Min来顶替当前节点，并递归删除Min节点
+                #   2、if左子树高, then选择左子树中最大的节点Max来顶替当前节点，并递归删除Max节点
+                if self.get_height(n.right) > self.get_height(n.left):
+                    min_node = self.find_min(n.right)
+                    n.element = min_node.element
+                    n.right = self.__delete(n.element, n.right)
+                else:
+                    max_node = self.find_max(n.left)
+                    n.element = max_node.element
+                    n.left = self.__delete(n.element, n.left)
+        if n:
+            n.height = max(self.get_height(n.left), self.get_height(n.right)) + 1
+        return n
+
+    def delete(self, e):
+        return self.__delete(e, self.root)
 
     def __insert(self, e, n):
         if not n:
@@ -194,9 +270,8 @@ class AvlTree(object):
         深度优先遍历
         '''
         if T:
-            print T.element
             self.__DFS(T.left)
-            print '/'
+            print T.element
             self.__DFS(T.right)
 
     def __BFS(self, nodes):
@@ -223,7 +298,11 @@ class AvlTree(object):
 
 if __name__ == '__main__':
     tree = AvlTree()
-    for i in range(10,20):
+    for i in range(10,30):
         tree.insert(i)
-    tree.BFS()
     tree.DFS()
+    #tree.delete(10)
+    print '---------------------'
+    #tree.DFS()
+    tree.BFS()
+    #tree.DFS()
