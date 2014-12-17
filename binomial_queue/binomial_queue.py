@@ -24,7 +24,7 @@ class BinQueue:
     '''
     MAX = sys.maxint
     MIN = -sys.maxint
-    def __init__(self, max_trees=1024):
+    def __init__(self, max_trees=32):
         self._trees = [None] * max_trees #bin trees
         self._size = 0
 
@@ -52,8 +52,10 @@ class BinQueue:
         #return self.__combine_trees(T2, T1)
 
         #链表插入
-        if (T2.element > T1.element):
-            return self.__combine_trees(T2, T1)
+        if (T1.element > T2.element):
+            T1, T2 = T2, T1
+            #return self.__combine_trees(T2, T1)
+        #T1小, T2大
         T2.next_sibling = T1.left_child
         T1.left_child = T2
         return T1
@@ -123,12 +125,23 @@ class BinQueue:
         return min_item
 
 if __name__ == '__main__':
-    queue = BinQueue()
-    threshold = 10
+    threshold = 5000
+    queue = BinQueue(threshold)
+    #array = [61,13,1,79,93,78,72,89,57,81]
+    array1 = []
     for i in range(threshold):
-        v = random.randint(0, 1000)
+        v = random.randint(0, 10000)
+        array1.append(v)
         queue.insert(v)
+    array1 = sorted(array1)
+    array2 = []
+    for i in range(threshold):
+        v = queue.delete_min()
+        array2.append(v)
 
     for i in range(threshold):
-        print queue.delete_min()
+        v1 = array1[i]
+        v2 = array2[i]
+        assert v1 == v2, '%s vs %s' % (v1, v2)
+
 
