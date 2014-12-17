@@ -2,19 +2,22 @@
 import os
 import sys
 import pdb
+import random
 
 class BinaryHeap:
     '''
     二叉堆就是我们通常所指的 "堆"
     '''
+    MAX = sys.maxint
+    MIN = -sys.maxint
     def __init__(self, max_elements):
         assert max_elements > 0
         self.capacity = max_elements
         self._size = 0
-        self.elements = [0] * (max_elements + 1) #下标0用来放置方便代码实现的一个极小值, -maxint
-        self.elements[0] = -sys.maxint #min value
+        self.elements = [0] * (max_elements + 2) #下标0用来放置方便代码实现的一个极小值, MIN
+        self.elements[0] = self.MIN #min value
         #程序中树的下标都是从1开始用的(下标1处放置了所有插入的数据的最小值),
-        #另外为方便程序实现,下标0处放置一个极小值-maxint
+        #另外为方便程序实现,下标0处放置一个极小值MIN
 
     def full(self):
         return self._size >= self.capacity
@@ -51,20 +54,18 @@ class BinaryHeap:
         '''
         assert not self.empty()
         min_element = self.elements[1]
-        last_element = self.elements[self._size]
+        last_element = self.elements[self.size()]
         self._size -= 1 #last element空间已经不复存在
         i = 1
         #从root节点（位置1）处开始执行下滤操作
-        while i * 2 <= self._size:
+        while i * 2 <= self.size():
             #find smaller child
             child = i * 2
-            if child < self._size:
+            if child < self.size() and self.elements[child + 1] < self.elements[child]:
                 #左儿子比右儿子大
-                if self.elements[child] > self.elements[child + 1]:
-                    child += 1 #指向较小的那个儿子
-                smaller = min(self.elements[child], self.elements[child+1])
-            else:#只有一个左儿子
-                smaller = self.elements[child]
+                child += 1 #指向较小的那个儿子
+            #只有一个左儿子, 直接选择child
+            smaller = self.elements[child]
             if last_element > smaller:
                 self.elements[i] = smaller
             else:
@@ -78,12 +79,85 @@ class BinaryHeap:
         self.elements[i] = last_element
         return min_element
 
+    def delete_min_v2(self):
+        '''
+        另外一种巧妙的实现，始终保证你的算法把每一个节点都看成有两个儿子，
+        为了实施这种解法，当堆的大小为偶数时(存在一个节点只有一个儿子)，
+        在每个下滤开始时，
+        可将其值大于堆中任何元素的标记放到堆的终端后面的位置上。
+        你必须在深思熟虑以后再这么做，而且必须要判断你是否确实需要使用这种技巧。虽然这不再需要测试右儿子的存在性，
+        但是你还是需要测试何时到达底层，因为对每一片树叶 算法将需要一个标记。
+        '''
+        assert not self.empty()
+        min_element = self.elements[1]
+        last_element = self.elements[self.size()]
+        sign = (self.size() % 2 == 0)
+        if sign:
+            #尾巴上加了一个MAX
+            self._size += 1
+            self.elements[self.size()] = self.MAX
+
+        i = 1
+        #从root节点（位置1）处开始执行下滤操作
+        while i * 2 <= self.size():
+            #find smaller child
+            child = i * 2
+            #左儿子比右儿子大
+            if self.elements[child + 1] < self.elements[child]:
+                child += 1 #指向较小的那个儿子
+            smaller = self.elements[child]
+            if last_element > smaller:
+                self.elements[i] = smaller
+            else:
+                self.elements[i] = last_element
+                break
+            i = child
+        #处理只有root节点的情况
+        self.elements[i] = last_element
+        if sign:
+            #把MAX干掉
+            self._size -= 2
+        else:
+            self._size -= 1
+        return min_element
+
     def pop(self):
-        return self.delete_min()
+        return self.delete_min_v2()
+
+def test2():
+    priority_queue = BinaryHeap(4)
+    priority_queue._size = 4
+    priority_queue.elements = [priority_queue.MIN, 3804, 8220, 5613, 8801, 0]
+    print priority_queue.pop()
+    print priority_queue.elements
+    print priority_queue.pop()
+    print priority_queue.pop()
+    print priority_queue.pop()
+
+def test1():
+    threshold = 100000
+    array1 = []
+    priority_queue = BinaryHeap(threshold)
+    for i in range(threshold):
+        k = random.randint(0, 100000)
+        array1.append(k)
+        priority_queue.insert(k)
+
+    #print priority_queue.elements
+    array1 = sorted(array1)
+    array2 = []
+    for i in range(threshold):
+        v1 = array1[i]
+        v2 = priority_queue.pop()
+        #if v1 != v2:
+        #    print priority_queue.elements
+        array2.append(v2)
+    #print array1
+    #print array2
+    for i in range(threshold):
+        v1 = array1[i]
+        v2 = array2[i]
+        assert v1 == v2, '%s vs %s' % (v1, v2)
 
 if __name__ == '__main__':
-    priority_queue = BinaryHeap(100)
-    for i in range(1000, 990, -1):
-        priority_queue.insert(i)
-    for i in range(priority_queue.size()):
-        print priority_queue.pop()
+    test1()
