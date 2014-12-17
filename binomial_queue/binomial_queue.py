@@ -35,11 +35,11 @@ class BinQueue:
         return self._size
 
     def insert(self, x):
-        node = BinNode(e)
-        H1 = BinQueue()
-        H1._size = 1
-        H1._trees[0] = node
-        self.__combine_trees(self, H1)
+        node = BinNode(x)
+        H = BinQueue()
+        H._size = 1
+        H._trees[0] = node
+        self.__merge(self, H)
         return True
 
     def __combine_trees(self, T1, T2):
@@ -54,7 +54,7 @@ class BinQueue:
         #链表插入
         if (T2.element > T1.element):
             return self.__combine_trees(T2, T1)
-        T2->next_sibling = T1.left_child
+        T2.next_sibling = T1.left_child
         T1.left_child = T2
         return T1
 
@@ -110,13 +110,25 @@ class BinQueue:
                 min_item = self._trees[i].element
                 min_tree_idx = i
         deleted_tree = self._trees[min_tree_idx].left_child  #min_tree_idx 删除关键字最小的节点,相当于H''
-        #删除了root，还得把tree拆开
+        #删除了root，还得把tree拆开成多颗二项树,
         deleted_queue = BinQueue()
+        deleted_queue._size = 2 ** min_tree_idx  - 1 # min_tree的节点数量是2^min_tree_idx,然后删除了一个元素
         for i in range(min_tree_idx - 1, -1, -1): #(min_tree_idx, 0]
             deleted_queue._trees[i] = deleted_tree
             deleted_tree = deleted_tree.next_sibling
-            deleted_queue.trees[i].next_sibling = None
+            deleted_queue._trees[i].next_sibling = None
         self._trees[min_tree_idx] = None        #H'
-        self._size -= deleted_tree.size()
-        self.__merge(self, deleted_tree)    #H' + H''
+        self._size -= deleted_queue.size() + 1
+        self.__merge(self, deleted_queue)    #H' + H''
         return min_item
+
+if __name__ == '__main__':
+    queue = BinQueue()
+    threshold = 10
+    for i in range(threshold):
+        v = random.randint(0, 1000)
+        queue.insert(v)
+
+    for i in range(threshold):
+        print queue.delete_min()
+
