@@ -19,6 +19,8 @@ class TreeNode(object):
 class SearchTree(object):
     '''
     二叉搜索树, 每个节点的类型都是TreeNode
+    性质：
+        任意节点的左儿子都小于该节点，右儿子都大于该节点
     '''
     def __init__(self):
         self.root = None

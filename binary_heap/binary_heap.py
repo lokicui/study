@@ -7,6 +7,10 @@ import random
 class BinaryHeap:
     '''
     二叉堆就是我们通常所指的 "堆"
+    结构性质：
+        堆是一颗完全二叉树，所以堆可以方便的用数组的方式来实现
+    堆序性质：
+        任意节点的值都应该小于它的所有后裔
     '''
     MAX = sys.maxint
     MIN = -sys.maxint

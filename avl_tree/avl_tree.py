@@ -16,6 +16,8 @@ class AvlNode(object):
 class AvlTree(object):
     '''
     AVL Tree
+    性质：
+        任意节点的左子树的高度和右子树的高度差都不能大于1
     '''
     def __init__(self):
         self.root = None
