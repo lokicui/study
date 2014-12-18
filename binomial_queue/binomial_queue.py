@@ -1,6 +1,7 @@
 #encoding=utf8
 import os
 import sys
+import math
 import pdb
 import random
 
@@ -25,8 +26,12 @@ class BinQueue:
     MAX = sys.maxint
     MIN = -sys.maxint
     def __init__(self, max_trees=32):
+        self._max_trees = max_trees
         self._trees = [None] * max_trees #bin trees
         self._size = 0
+
+    def trees(self):
+        return self._max_trees
 
     def empty(self):
         return self._size == 0
@@ -36,7 +41,7 @@ class BinQueue:
 
     def insert(self, x):
         node = BinNode(x)
-        H = BinQueue()
+        H = BinQueue(1)
         H._size = 1
         H._trees[0] = node
         self.__merge(self, H)
@@ -54,7 +59,6 @@ class BinQueue:
         #链表插入
         if (T1.element > T2.element):
             T1, T2 = T2, T1
-            #return self.__combine_trees(T2, T1)
         #T1小, T2大
         T2.next_sibling = T1.left_child
         T1.left_child = T2
@@ -69,8 +73,8 @@ class BinQueue:
         i = 0
         j = 1
         while j <= H1.size():
-            T1 = H1._trees[i]
-            T2 = H2._trees[i]
+            T1 = H1._trees[i] if i < len(H1._trees) else None
+            T2 = H2._trees[i] if i < len(H2._trees) else None
             k = (not not carry) << 2 | (not not T2) << 1 | (not not T1)
             if k in (0, 1): #0 means no trees, 1 means only H1
                 pass
@@ -107,13 +111,13 @@ class BinQueue:
         assert not self.empty()
         min_item = self.MAX
         min_tree_idx = None
-        for i in range(self.size()):
+        for i in range(self.trees()):
             if self._trees[i] and self._trees[i].element < min_item:
                 min_item = self._trees[i].element
                 min_tree_idx = i
         deleted_tree = self._trees[min_tree_idx].left_child  #min_tree_idx 删除关键字最小的节点,相当于H''
         #删除了root，还得把tree拆开成多颗二项树,
-        deleted_queue = BinQueue()
+        deleted_queue = BinQueue(min_tree_idx)
         deleted_queue._size = 2 ** min_tree_idx  - 1 # min_tree的节点数量是2^min_tree_idx,然后删除了一个元素
         for i in range(min_tree_idx - 1, -1, -1): #(min_tree_idx, 0]
             deleted_queue._trees[i] = deleted_tree
@@ -126,7 +130,7 @@ class BinQueue:
 
 if __name__ == '__main__':
     threshold = 5000
-    queue = BinQueue(threshold)
+    queue = BinQueue(13)
     #array = [61,13,1,79,93,78,72,89,57,81]
     array1 = []
     for i in range(threshold):
@@ -143,5 +147,4 @@ if __name__ == '__main__':
         v1 = array1[i]
         v2 = array2[i]
         assert v1 == v2, '%s vs %s' % (v1, v2)
-
 
