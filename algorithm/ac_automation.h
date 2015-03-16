@@ -165,7 +165,8 @@ public:
 private:
     size_t hash(T* v)
     {
-        return static_cast<size_t>(*v);
+        // return static_cast<size_t>(*v);
+        return hash_(v);
     }
 private:
     node_t *root_;
