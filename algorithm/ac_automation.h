@@ -19,13 +19,34 @@
  */
 
 template <typename T>
-// 实现T* T等版本
+class TypeTraits
+{
+private:
+    template<class U> struct PointerTraits
+    {
+        enum { result = false };
+        typedef U* PointerType;
+    };
+
+    template<class U> struct PointerTraits<U*>
+    {
+        enum { result = true };
+        typedef U* PointerType;
+    };
+public:
+    enum { isPointer = PointerTraits<T>::result };
+    typedef typename PointerTraits<T>::PointerType PointerType;
+};
+
+template <typename U>
 class ACAutomation
 {
 public:
+    // 用TypeTraits的意义在于T永远都存指针,不会存在拷贝
+    typedef typename TypeTraits<U>::PointerType T;
+    typedef typename std::vector<T> pattern_t;
+    typedef typename std::vector<T>::const_iterator pattern_iterator_type;
     class Node;
-    typedef typename std::vector<T*> pattern_t;
-    typedef typename std::vector<T*>::const_iterator pattern_iterator_type;
     typedef typename std::map<size_t, Node*> next_t;
     typedef typename std::map<size_t, Node*>::iterator next_iterator_type;
     typedef class Node
@@ -33,19 +54,19 @@ public:
     public:
         Node():T_(NULL), parent_(NULL), fail_(NULL), next_(new next_t()), pattern_(NULL)
         {}
-        Node(T* t, Node* parent):T_(t), parent_(parent), fail_(NULL), next_(new next_t()), pattern_(NULL)
+        Node(T t, Node* parent):T_(t), parent_(parent), fail_(NULL), next_(new next_t()), pattern_(NULL)
         {}
-        Node(T* t, Node* parent, Node* fail):T_(t), parent_(parent), fail_(fail), next_(new next_t()), pattern_(NULL)
+        Node(T t, Node* parent, Node* fail):T_(t), parent_(parent), fail_(fail), next_(new next_t()), pattern_(NULL)
         {}
         ~Node()
         {
             delete next_;
         }
-        T * get()
+        T  get()
         {
             return T_;
         }
-        T * T_;
+        T  T_;
         Node *parent_;
         Node *fail_;
         next_t *next_;
@@ -230,7 +251,7 @@ public:
         return match_patterns->size();
     }
 private:
-    size_t hash(T* v)
+    size_t hash(T v)
     {
         return hash_(v);
     }
@@ -280,6 +301,6 @@ private:
 
 private:
     node_t *root_;
-    std::tr1::hash<T*> hash_;
+    std::tr1::hash<T> hash_;
 };
 #endif // AC_AUTOMATION_H
