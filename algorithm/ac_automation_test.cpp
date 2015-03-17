@@ -46,10 +46,10 @@ int main(int argc, char **argv)
         char c = needle[i];
         pneedle.push_back(g_map[c]);
     }
-    acm.add(&pd);
     acm.add(&pa);
     acm.add(&pb);
-
+    acm.add(&pd);
+    acm.build();
     std::vector< const std::vector<char *> *> match_patterns;
     int32_t ret = acm.search(&match_patterns, &pneedle);
     std::cout << ret << std::endl;

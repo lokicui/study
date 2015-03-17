@@ -1,3 +1,4 @@
+// Copyright (c) 2015, lokicui@gmail.com. All rights reserved.
 #ifndef AC_AUTOMATION_H
 #define AC_AUTOMATION_H
 #pragma once
@@ -11,6 +12,12 @@
 #include <iostream>
 #include <string>
 #include <tr1/functional>
+
+/*
+ *AC自动机
+ *Trie树版本
+ */
+
 template <typename T>
 // 实现T* T等版本
 class ACAutomation
@@ -56,21 +63,20 @@ public:
     {
         // BFS遍历删除
         std::list<node_t*> nodelist;
-        nodelist.push_front(root_);
+        nodelist.push_back(root_);
         while(!nodelist.empty())
         {
             node_t * node = nodelist.front();
             nodelist.pop_front();
             for (next_iterator_type it = node->next_->begin(); it != node->next_->end(); ++it)
             {
-                nodelist.push_front(it->second);
+                nodelist.push_back(it->second);
             }
             delete node;
         }
     }
 
-    // pattern要求是有序的
-    int32_t add(const pattern_t* pattern)
+    int32_t build()
     {
         // 构造失败指针;
         // 构造失败指针的过程概括起来就一句话：
@@ -83,6 +89,44 @@ public:
         //     root的子节点的失败指针都指向root。
         //     节点(数据为T)的失败指针指向：从T节点的父节点的fail节点回溯直到找到某节点的子节点也是数据T，没有找到就指向root
         //
+        // BFS遍历
+        std::list<node_t*> nodelist;
+        nodelist.push_back(root_);
+        while(!nodelist.empty())
+        {
+            node_t * node = nodelist.front();
+            nodelist.pop_front();
+            for (next_iterator_type it = node->next_->begin(); it != node->next_->end(); ++it)
+            {
+                nodelist.push_back(it->second);
+            }
+            // 父节点的失败指针
+            // root_的父亲指向root_
+            // root_的fail_指向root_
+            node_t * fail(node->parent_->fail_);
+            const size_t t = hash(node->get());
+            do
+            {
+                next_iterator_type it = fail->next_->find(t);
+                // Note: 若parent_->fail_指向root_, 而当前节点是root_的子节点，则必然找到自己
+                if ( it != fail->next_->end() && it->second != node)
+                {
+                    fail = it->second;
+                    break;
+                }
+                else
+                {
+                    fail = fail->fail_;
+                }
+            } while (fail != root_);
+            node->fail_ = fail;
+        }
+        return 0;
+    }
+
+    int32_t add(const pattern_t* pattern)
+    {
+        // 建Trie树
         if (!pattern || pattern->empty())
             return -1;
         node_t *p(root_);
@@ -92,22 +136,8 @@ public:
             next_iterator_type it = p->next_->find(t);
             if (it == p->next_->end())
             {
-                node_t * fail(p->fail_);
-                do
-                {
-                    it = fail->next_->find(t);
-                    if ( it != fail->next_->end())
-                    {
-                        fail = it->second;
-                        break;
-                    }
-                    else
-                    {
-                        fail = fail->fail_;
-                    }
-                } while (fail != root_);
-
-                node_t * n = new node_t(*k, p, fail);
+                // 先让fail_  = root_
+                node_t * n = new node_t(*k, p, root_);
                 (*(p->next_))[t] = n;
                 p = n;
             }
@@ -116,8 +146,12 @@ public:
                 p = it->second;
             }
         }
-        // 除非加入了重复的pattern
-        assert(p->pattern_ == NULL);
+        if (p->pattern_)
+        {
+            // 除非加入了重复的pattern
+            assert(p->pattern_ == NULL);
+            return -2;
+        }
         p->pattern_ = const_cast<pattern_t*>(pattern);
         return 0;
     }
@@ -200,6 +234,50 @@ private:
     {
         return hash_(v);
     }
+
+    int32_t add_and_build(const pattern_t* pattern)
+    {
+        // 别用这个函数就对了
+        // 建Trie树的同时设置失败指针, 凡是前缀可能成为其他pattern后缀的要先add进来
+        if (!pattern || pattern->empty())
+            return -1;
+        node_t *p(root_);
+        for (pattern_iterator_type k = pattern->begin(); k != pattern->end(); ++k)
+        {
+            const size_t t = hash(*k);
+            next_iterator_type it = p->next_->find(t);
+            if (it == p->next_->end())
+            {
+                node_t * fail(p->fail_);
+                do
+                {
+                    it = fail->next_->find(t);
+                    if ( it != fail->next_->end())
+                    {
+                        fail = it->second;
+                        break;
+                    }
+                    else
+                    {
+                        fail = fail->fail_;
+                    }
+                } while (fail != root_);
+
+                node_t * n = new node_t(*k, p, fail);
+                (*(p->next_))[t] = n;
+                p = n;
+            }
+            else
+            {
+                p = it->second;
+            }
+        }
+        // 除非加入了重复的pattern
+        assert(p->pattern_ == NULL);
+        p->pattern_ = const_cast<pattern_t*>(pattern);
+        return 0;
+    }
+
 private:
     node_t *root_;
     std::tr1::hash<T*> hash_;
