@@ -6,6 +6,7 @@
 #include <string.h>
 #include <assert.h>
 #include <map>
+#include <list>
 #include <vector>
 #include <iostream>
 #include <string>
@@ -53,7 +54,19 @@ public:
     }
     ~ACAutomation()
     {
-        // @todo遍历删除
+        // BFS遍历删除
+        std::list<node_t*> nodelist;
+        nodelist.push_front(root_);
+        while(!nodelist.empty())
+        {
+            node_t * node = nodelist.front();
+            nodelist.pop_front();
+            for (next_iterator_type it = node->next_->begin(); it != node->next_->end(); ++it)
+            {
+                nodelist.push_front(it->second);
+            }
+            delete node;
+        }
     }
 
     // pattern要求是有序的
@@ -111,11 +124,31 @@ public:
 
     int32_t remove(const pattern_t* pattern)
     {
+        // @todo 还没完工
+        // 确认存在这个pattern
+        // 所有fail_指向这个node的都要改指向node->fail_
         if (!pattern || pattern->empty())
             return -1;
         node_t *p(root_);
         for (pattern_iterator_type k = pattern->begin(); k != pattern->end(); ++k)
         {
+            const size_t t = hash(*k);
+            next_iterator_type it = p->next_->find(t);
+            if (it == p->next_->end())
+            {
+                return -1;
+            }
+            else
+            {
+                p = it->second;
+            }
+        }
+
+        node_t *leaf(p);
+        while (leaf != root_ && leaf->next_->size() < 2)
+        {
+            // 所有fail指针指向leaf的都要改指向到leaf->fail_
+            leaf = leaf->parent_;
         }
         return 0;
     }
@@ -165,7 +198,6 @@ public:
 private:
     size_t hash(T* v)
     {
-        // return static_cast<size_t>(*v);
         return hash_(v);
     }
 private:
