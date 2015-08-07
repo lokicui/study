@@ -179,7 +179,7 @@ public:
 
     int32_t remove(const pattern_t* pattern)
     {
-        // @todo 还没完工
+        // @todo 还没完工,可以考虑标记删除
         // 确认存在这个pattern
         // 所有fail_指向这个node的都要改指向node->fail_
         if (!pattern || pattern->empty())
